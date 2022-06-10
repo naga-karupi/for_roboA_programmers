@@ -25,6 +25,9 @@ PS4BT ps4(&Btd, PAIR);
 
 #define EMERGENCY_STOP -1
 
+bool circle_click_flag = false;
+uint64_t start_milli_sec;
+
 struct Axis{
 	int8_t x = 0,
 	       y = 0,
@@ -65,7 +68,7 @@ void loop() {
 			while(1);
 		}
 
-		if(ps4.getButtonClick(CIRCLE))shot();
+		shot();
 
 		axis.y = (ps4.getButtonPress(UP)?1:0) + (ps4.getButtonPress(DOWN)?-1:0);
 		axis.x = (ps4.getButtonPress(RIGHT)?1:0) + (ps4.getButtonPress(LEFT)?-1:0);
@@ -77,13 +80,21 @@ void loop() {
 }
 
 void shot(){
-	digitalWrite(39, LOW);
-	digitalWrite(41, HIGH);
-	delay(1000);
+	if(start_milli_sec >= 2000 && circle_click_flag){
+		digitalWrite(39, LOW);
+		circle_click_flag = false;
+	}
+	
+	if(!circle_click_flag && ps4.getButtonPress(CIRCLE)){
+		circle_click_flag = true;
+		start_milli_sec = millis()
 
-	digitalWrite(39, HIGH);
-	digitalWrite(41, LOW);
-	delay(1000);
+		digitalWrite(39, LOW);
+		digitalWrite(41, HIGH);
+	}else if(start_milli_sec >= 1000 && circle_click_flag){
+		digitalWrite(39, HIGH);
+		digitalWrite(41, LOW);
+	}
 
-	digitalWrite(39, LOW);
+
 }
